@@ -32,7 +32,7 @@
       };
 
       pkgsClean = with lib; filterAttrs (n: isDerivation) pkgs.qchem;
-  in {
+  in rec {
 
     overlays = {
       qchem = import ./overlay.nix;
@@ -40,8 +40,19 @@
       default = self.overlays.qchem;
     };
 
-    packages."x86_64-linux" = pkgsClean;
+    packages."x86_64-linux" = pkgsClean // {python3P = pkgs.qchem.python3.withPackages(ps: with ps; [
+          #numpy toolz requests pandas scipy sympy scikit-learn
+          numpy matplotlib meep
+    ]);};
+
     hydraJobs."x86_64-linux" = pkgsClean;
     checks."x86_64-linux" = with lib; filterAttrs (n: isDerivation) pkgs.qchem.tests;
+
+    # packages."x86_64-linux".python3P = pkgs.python3.withPackages(ps: with ps; [
+    #       #numpy toolz requests pandas scipy sympy scikit-learn
+    #       numpy
+    #     ]);
+
+
   };
 }
